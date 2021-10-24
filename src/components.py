@@ -31,8 +31,16 @@ class Movement:
 @component
 class Inventory:
     contents: List[Entity] = field(default_factory=list)
+
+
+@component
+class MaxCarry:
     current_weight: int = 0
-    max_weight: int = -1  # -1 means no maximum
+    # `max_weight=0` means no maximum -- no reason to have this component if this is 0 otherwise!
+    max_weight: int = 0
+
+    def __str__(self) -> str:
+        return f"{self.current_weight}/{'∞' if not self.max_weight else self.max_weight}"
 
 
 @component
@@ -57,5 +65,11 @@ class Obstacle:
 
 @component
 class Region:
-    # TODO:  Maybe change this to a List[Entity]?
     tiles: List[Tuple[int, int]] = field(default_factory=list)
+
+
+@component
+class Stockable:
+    # TODO: This is unused for now -- `Stockable` will just be a flag for Entities
+    #       in the meantime!
+    region: Optional[int]

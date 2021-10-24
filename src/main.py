@@ -11,7 +11,8 @@ if __name__ == "__main__":
     world.add_entity([
         Position(0, 0),
         Movement(),
-        Inventory(max_weight=1),
+        Inventory(),
+        MaxCarry(max_weight=1),
         Name(name="Urist"),
         Display(icon="☺"),
         Debug(),
