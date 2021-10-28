@@ -1,7 +1,7 @@
-from typing import List, Optional, Tuple
+from typing import List, Optional, Tuple, Dict, Union
 from dataclasses import dataclass as component, field
 
-from base import Entity
+from base import Entity, Task, HaulStep
 
 
 @component
@@ -19,6 +19,14 @@ class Position:
 
     def __str__(self) -> str:
         return f"({self.x}, {self.y})"
+
+    def __eq__(self, other: Union["Position", Tuple[int, int]]) -> bool:
+        if isinstance(other, Position):
+            return self.x == other.x and self.y == other.y
+        return self.x == other[0] and self.y == other[1] if other else False
+
+    def as_tuple(self) -> Tuple[int, int]:
+        return self.x, self.y
 
 
 @component
@@ -41,6 +49,13 @@ class MaxCarry:
 
     def __str__(self) -> str:
         return f"{self.current_weight}/{'∞' if not self.max_weight else self.max_weight}"
+
+
+@component
+class Hauls:
+    step: Optional[HaulStep] = None
+    item: Optional[Entity] = None
+    region: Optional[Entity] = None
 
 
 @component
@@ -72,4 +87,13 @@ class Region:
 class Stockable:
     # TODO: This is unused for now -- `Stockable` will just be a flag for Entities
     #       in the meantime!
-    region: Optional[int]
+    region: Optional[int] = None
+
+
+@component
+class Tasked:
+    priorities: Dict[Task, int] = field(default_factory=dict)
+    current_task: Task = Task.IDLE
+
+    def __init__(self):
+        self.priorities = {task: task.value for task in Task}

@@ -14,6 +14,7 @@ if __name__ == "__main__":
         Inventory(),
         MaxCarry(max_weight=1),
         Name(name="Urist"),
+        Tasked(),
         Display(icon="☺"),
         Debug(),
     ])
@@ -26,6 +27,7 @@ if __name__ == "__main__":
             Obstacle(is_passable=False),
             Display(icon="█"),
         ])
+        used.append(coords)
     # Generate socks
     for i in range(30):
         coords = world.random_coords(used)
@@ -33,17 +35,30 @@ if __name__ == "__main__":
             Position(x=coords[0], y=coords[1]),
             Name(name=f"Sock {i+1}"),
             Weight(),
+            Stockable(),
             Display(icon="s"),
         ])
+        used.append(coords)
+    coords = world.random_coords(used)
+    world.add_entity([
+        Name(name="Sock Stockpile"),
+        Inventory(),
+        Region(tiles=[coords]),
+        Display(icon="@")
+    ])
     # Processors
-    world.add_processor(MovementProcessor)
-    world.add_processor(HaulingProcessor)
+    world.add_processor(TaskProcessor)
+    # Various Processors for Tasks
+    world.add_processor(StockingProcessor)
+    # Finalizing Tasks (Movement, etc)
     world.add_processor(PathfindingProcessor)
+    world.add_processor(MovementProcessor)
+    world.add_processor(RegionProcessor)
     # NOTE: ALWAYS DO THESE LAST (for now)
     world.add_processor(DisplayProcessor)
     world.add_processor(DebugProcessor)
     # world.process()
-    for i in range(100):
+    for i in range(1000):
         clear_screen()
         world.process()
-        time.sleep(0.5)
+        time.sleep(0.2)

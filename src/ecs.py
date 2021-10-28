@@ -1,3 +1,4 @@
+import sys
 from random import randint
 from typing import Dict, Set, List, Type, Optional, Tuple, Iterable
 
@@ -114,6 +115,9 @@ class World:
             # Some set theory for speed
             for entity in set.intersection(*[self.components[c] for c in components]):
                 yield entity, [self.entities[entity][c] for c in components]
+        except TypeError:
+            print("No components passed to world.get_components()")
+            sys.exit(1)
         except KeyError:
             pass
 
