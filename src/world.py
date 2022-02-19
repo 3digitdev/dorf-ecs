@@ -4,7 +4,7 @@ from typing import Dict, Set, List, Type, Optional, Tuple, Iterable
 
 from a_star import Graph
 from base import C, Entity, Processor, MAP_WIDTH, MAP_HEIGHT
-from components import Position, Movement, Inventory, Name, Obstacle
+from components import Position, Obstacle
 from terrain import Terrain
 
 

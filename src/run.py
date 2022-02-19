@@ -1,12 +1,12 @@
 import time
 
-from ecs import World
 from grid import clear_screen
+from world import World
 from processors import *
 from components import *
 
 
-if __name__ == "__main__":
+def main():
     world = World()
     world.add_entity([
         Position(0, 0),
@@ -56,9 +56,15 @@ if __name__ == "__main__":
     world.add_processor(RegionProcessor)
     # NOTE: ALWAYS DO THESE LAST (for now)
     world.add_processor(DisplayProcessor)
-    world.add_processor(DebugProcessor)
+    # Toggle this on/off w/ comments to enable debugging
+    # world.add_processor(DebugProcessor)
     # world.process()
     for i in range(1000):
         clear_screen()
         world.process()
         time.sleep(0.2)
+        # input()
+
+
+if __name__ == "__main__":
+    main()
