@@ -54,7 +54,7 @@ class MaxCarry:
 @component
 class Hauls:
     step: Optional[HaulStep] = None
-    item: Optional[Entity] = None
+    items: List[Entity] = field(default_factory=list)
     region: Optional[Entity] = None
 
 

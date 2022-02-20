@@ -101,11 +101,11 @@ class StockingProcessor(Processor):
     Handles assigning Dwarves an item to start hauling to a stockpile
 
     This is a 5-step process:
-    1) No item assigned;  Find the closest one
-    2) Item assigned; need to move to it and pick it up
-    3) Item picked up; need to find the closest region to bring it to
-    4) Region assigned; need to move to it
-    5) Region found; drop off the item
+    1) No item assigned;    Find the closest one
+    2) Item assigned;       Need to move to it and pick it up
+    3) Item picked up;      Need to find the closest region to bring it to
+    4) Region assigned;     Need to move to it
+    5) Region found;        Drop off the item
     """
     def _find_closest_item(self, pos: Position, carry: MaxCarry, stockpiled_items: List[Entity]) -> Tuple[Entity, Optional[Position]]:
         closest: Tuple[int, Optional[Position], int] = (-1, None, 999999)
@@ -150,29 +150,51 @@ class StockingProcessor(Processor):
                 if stockpiled_items is None:
                     stockpiled_items = self._get_stockpiled_items()
                 item, item_pos = self._find_closest_item(pos, carry, stockpiled_items)
+                if inventory.contents:
+                    if not item_pos:  # Not full inventory, but also nothing to pick up
+                        hauls.step = HaulStep.NEED_REGION
+                        continue
+                    # Check if there's a region closer than the nearest item
+                    region, region_pos = self._find_closest_region(pos)
+                    dist_to_region = heuristic(Node(x=pos.x, y=pos.y), Node(x=region_pos.x, y=region_pos.y))
+                    dist_to_item = heuristic(Node(x=pos.x, y=pos.y), Node(x=item_pos.x, y=item_pos.y))
+                    if dist_to_region < dist_to_item:
+                        # Go drop things off first
+                        hauls.step = HaulStep.NEED_REGION
+                        continue
+                else:
+                    # No items to drop off, and no items to pick up -- time to do something else?
+                    if not item_pos:
+                        # TODO:  SOMEHOW CHANGE TO NEXT PRIORITY TASK?
+                        continue
                 debug.messages.append(f"Found {item} at {item_pos}")
                 movement.target = item_pos.as_tuple()
                 stockpiled_items.append(item)
                 hauls.step = HaulStep.FIND_ITEM
-                hauls.item = item
+                hauls.items.append(item)
                 debug.messages.append(f"Hauling {hauls}")
             # 2) Item assigned; need to move to it and pick it up
             if hauls.step == HaulStep.FIND_ITEM:
-                if not hauls.item:
+                if not hauls.items:
                     hauls.step = HaulStep.NEED_ITEM
                 else:
-                    item_pos = self.world.get_entity_component(hauls.item, Position)
+                    item = hauls.items[-1]
+                    item_pos = self.world.get_entity_component(item, Position)
                     debug.messages.append(f"{name.name} looking for item at {pos}...")
                     if pos == item_pos:
-                        debug.messages.append(f"Arrived at {pos}; picking up {hauls.item}")
-                        i_weight = self.world.get_entity_component(hauls.item, Weight)
+                        debug.messages.append(f"Arrived at {pos}; picking up {item}")
+                        i_weight = self.world.get_entity_component(item, Weight)
                         if carry.current_weight + i_weight.weight > carry.max_weight:
                             hauls.step = HaulStep.NEED_ITEM
+                            hauls.items.pop()
                         else:
                             carry.current_weight += i_weight.weight
-                            inventory.contents.append(hauls.item)
-                            self.world.remove_component(hauls.item, Position)
-                            hauls.step = HaulStep.NEED_REGION
+                            inventory.contents.append(item)
+                            self.world.remove_component(item, Position)
+                            if carry.current_weight < carry.max_weight:
+                                hauls.step = HaulStep.NEED_ITEM
+                            else:
+                                hauls.step = HaulStep.NEED_REGION
                         movement.target = None
                         movement.path = []
                     if item_pos != movement.target:
@@ -201,13 +223,15 @@ class StockingProcessor(Processor):
                         movement.target = region_pos.as_tuple()
                         hauls.region = region
                     if pos == movement.target:
-                        debug.messages.append(f"Arrived at {pos}; dropping off {hauls.item}")
-                        # 5) Region found; drop off the item
-                        i_weight = self.world.get_entity_component(hauls.item, Weight)
-                        carry.current_weight -= i_weight.weight
-                        inventory.contents.remove(hauls.item)
-                        self.world.add_component(hauls.item, Position(x=pos.x, y=pos.y))
+                        # 5) Region found; drop off the items
+                        for item in hauls.items:
+                            debug.messages.append(f"Arrived at {pos}; dropping off {item}")
+                            i_weight = self.world.get_entity_component(item, Weight)
+                            carry.current_weight -= i_weight.weight
+                            inventory.contents.remove(item)
+                            self.world.add_component(item, Position(x=pos.x, y=pos.y))
                         hauls.step = HaulStep.NEED_ITEM
+                        hauls.items = []
                         movement.target = None
                         movement.path = []
 

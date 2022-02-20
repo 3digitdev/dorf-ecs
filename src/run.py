@@ -12,7 +12,7 @@ def main():
         Position(0, 0),
         Movement(),
         Inventory(),
-        MaxCarry(max_weight=1),
+        MaxCarry(max_weight=5),
         Name(name="Urist"),
         Tasked(),
         Display(icon="☺"),
@@ -62,7 +62,7 @@ def main():
     for i in range(1000):
         clear_screen()
         world.process()
-        time.sleep(0.2)
+        time.sleep(0.1)
         # input()
 
 
