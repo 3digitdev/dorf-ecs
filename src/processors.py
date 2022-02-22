@@ -42,17 +42,13 @@ class MovementProcessor(Processor):
             if not movement.target:
                 movement.path = []
                 continue
-                # TODO:  TEMPORARY.  This is just randomly assigning a new destination when we run out.
-                # movement.target = self.world.random_coords(obstacles)
-                # movement.path = []
-                # debug.messages.append(f"{name.name} moving to {movement.target}")
             else:  # Move along path at specified speed
                 for i in range(movement.speed):
                     if not movement.path:
                         break
                     next_step = movement.path.pop(0)
                     if next_step in obstacles:
-                        # The terrain changed and we don't have a valid path anymore.
+                        # The terrain changed, and we don't have a valid path anymore.
                         # Clear out the invalid path so the PathfindingProcessor can give us a new one
                         movement.path = []
                         # We don't want to hit the `if` at the end
@@ -181,7 +177,16 @@ class StockingProcessor(Processor):
                     item = hauls.items[-1]
                     item_pos = self.world.get_entity_component(item, Position)
                     debug.messages.append(f"{name.name} looking for item at {pos}...")
+                    if not item_pos or (pos == movement.target and item_pos != movement.target):
+                        debug.messages.append(f"Moved to {item_pos}, where'd it go??")
+                        # The item moved since we set it.  Find a new item instead.
+                        hauls.items.pop()
+                        hauls.step = HaulStep.NEED_ITEM
+                        movement.target = None
+                        movement.path = []
+                        continue
                     if pos == item_pos:
+                        # Found the item; standing on it; pick it up.
                         debug.messages.append(f"Arrived at {pos}; picking up {item}")
                         i_weight = self.world.get_entity_component(item, Weight)
                         if carry.current_weight + i_weight.weight > carry.max_weight:
@@ -189,6 +194,7 @@ class StockingProcessor(Processor):
                             hauls.items.pop()
                         else:
                             carry.current_weight += i_weight.weight
+                            debug.messages.append(f"Adding {item} to inventory!")
                             inventory.contents.append(item)
                             self.world.remove_component(item, Position)
                             if carry.current_weight < carry.max_weight:
@@ -196,11 +202,6 @@ class StockingProcessor(Processor):
                             else:
                                 hauls.step = HaulStep.NEED_REGION
                         movement.target = None
-                        movement.path = []
-                    if item_pos != movement.target:
-                        debug.messages.append(f"Moved to {item_pos}!")
-                        # The item moved since we set it?  Find it again.
-                        movement.target = item_pos.as_tuple()
                         movement.path = []
             # 3) Item picked up; need to find the closest region to bring it to
             if hauls.step == HaulStep.NEED_REGION:

@@ -18,7 +18,17 @@ def main():
         Display(icon="☺"),
         Debug(),
     ])
-    used = [(0, 0)]
+    world.add_entity([
+        Position(14, 14),
+        Movement(),
+        Inventory(),
+        MaxCarry(max_weight=5),
+        Name(name="Bronze"),
+        Tasked(),
+        Display(icon="☻"),
+        Debug(),
+    ])
+    used = [(0, 0), (14, 14)]
     # Generate walls
     for i in range(30):
         coords = world.random_coords(used)
@@ -56,7 +66,7 @@ def main():
     world.add_processor(RegionProcessor)
     # NOTE: ALWAYS DO THESE LAST (for now)
     world.add_processor(DisplayProcessor)
-    # Toggle this on/off w/ comments to enable debugging
+    # Toggle this on/off w/ comment to enable debugging
     # world.add_processor(DebugProcessor)
     # world.process()
     for i in range(1000):
