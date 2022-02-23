@@ -4,30 +4,13 @@ from grid import clear_screen
 from world import World
 from processors import *
 from components import *
+from entities import *
 
 
 def main():
     world = World()
-    world.add_entity([
-        Position(0, 0),
-        Movement(),
-        Inventory(),
-        MaxCarry(max_weight=5),
-        Name(name="Urist"),
-        Tasked(),
-        Display(icon="☺"),
-        Debug(),
-    ])
-    world.add_entity([
-        Position(14, 14),
-        Movement(),
-        Inventory(),
-        MaxCarry(max_weight=5),
-        Name(name="Bronze"),
-        Tasked(),
-        Display(icon="☻"),
-        Debug(),
-    ])
+    world.add_entity(Dorf.init(name="Urist", icon="☺", pos=(0, 0)))
+    world.add_entity(Dorf.init(name="Bronzi", icon="☻", pos=(14, 14)))
     used = [(0, 0), (14, 14)]
     # Generate walls
     for i in range(30):
